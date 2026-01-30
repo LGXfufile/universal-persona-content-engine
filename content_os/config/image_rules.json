@@ -1,0 +1,43 @@
+{
+  "min_resolution": 1080,
+  "preferred_resolution": "1920x1080",
+  "age_hint": true,
+  "banned_elements": [
+    "luxury",
+    "MacBook",
+    "iPhone",
+    "高端汽车",
+    "奢侈品",
+    "豪宅",
+    "名牌包",
+    "高档餐厅"
+  ],
+  "preferred_elements": [
+    "生活感",
+    "旧物",
+    "自然光",
+    "居家环境",
+    "日常用品",
+    "朴素穿着",
+    "真实场景"
+  ],
+  "style_guidelines": {
+    "color_tone": "温暖自然",
+    "lighting": "自然光线",
+    "composition": "生活化构图",
+    "mood": "真实亲切"
+  },
+  "quality_thresholds": {
+    "similarity_max": 0.85,
+    "content_similarity_max": 0.80,
+    "seo_keyword_density_min": 0.02,
+    "seo_keyword_density_max": 0.04,
+    "title_attraction_min": 7,
+    "content_actionability_min": 8
+  },
+  "retry_limits": {
+    "image_generation": 3,
+    "content_generation": 3,
+    "title_generation": 5
+  }
+}
