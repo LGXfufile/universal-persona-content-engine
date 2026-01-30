@@ -1,27 +1,7 @@
 {
   "version": 2,
-  "name": "universal-persona-content-engine",
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
-  "env": {
-    "DEEPSEEK_API_KEY": "@deepseek_api_key"
-  },
   "functions": {
-    "pages/api/generate.js": {
+    "pages/api/*.js": {
       "maxDuration": 300
     }
   }
