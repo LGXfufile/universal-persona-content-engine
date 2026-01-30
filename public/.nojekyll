@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>UPCE - 万能虚拟产品生成系统</title>
+    <meta name="description" content="通用虚拟产品内容生成系统，一键生成100篇爆文">
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+</head>
+<body>
+    <div id="__next"></div>
+</body>
+</html>
