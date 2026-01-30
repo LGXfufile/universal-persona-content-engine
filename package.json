@@ -20,13 +20,8 @@
     "axios": "^1.6.0",
     "crypto-js": "^4.2.0",
     "similarity": "^1.2.1",
-    "nodejieba": "^2.6.0",
-    "sharp": "^0.33.0",
     "framer-motion": "^10.16.0",
-    "node-fetch": "^3.3.2",
-    "cheerio": "^1.0.0-rc.12",
     "markdown-it": "^14.0.0",
-    "fs-extra": "^11.2.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
