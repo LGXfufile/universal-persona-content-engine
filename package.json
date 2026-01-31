@@ -11,26 +11,28 @@
     "export": "next build && next export"
   },
   "dependencies": {
-    "next": "^14.0.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "tailwindcss": "^3.4.0",
+    "archiver": "^6.0.0",
     "autoprefixer": "^10.4.0",
-    "postcss": "^8.4.0",
     "axios": "^1.6.0",
     "crypto-js": "^4.2.0",
-    "similarity": "^1.2.1",
     "framer-motion": "^10.16.0",
+    "fs-extra": "^11.3.3",
     "markdown-it": "^14.0.0",
+    "next": "^14.0.0",
+    "postcss": "^8.4.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "similarity": "^1.2.1",
+    "tailwindcss": "^3.4.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "typescript": "^5.0.0",
     "eslint": "^8.0.0",
-    "eslint-config-next": "^14.0.0"
+    "eslint-config-next": "^14.0.0",
+    "typescript": "^5.0.0"
   },
   "keywords": [
     "content-generation",

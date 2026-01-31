@@ -1,0 +1,23 @@
+{
+  "roleId": "role_c555723b",
+  "roleDescription": "三线城市32岁健身教练，月入6000，想做线上私教",
+  "generatedAt": "2026-01-31T06:40:26.901Z",
+  "statistics": {
+    "titlesCount": 10,
+    "articlesCount": 3,
+    "imagesCount": 12,
+    "totalWords": 3931,
+    "avgWordsPerArticle": 1310
+  },
+  "outputPath": "/Users/guangxin/Documents/02_项目开发/前端项目/myGit/claude/20260130_1/upce_output/role_c555723b",
+  "files": {
+    "analysisReport": "analysis_report.md",
+    "completeReport": "complete_report.md",
+    "titlesList": "titles.txt",
+    "articlesDir": "articles/",
+    "imagesDir": "images/",
+    "publishReadyDir": "publish_ready/",
+    "imagePrompts": "image_prompts.json",
+    "statistics": "generation_stats.json"
+  }
+}
