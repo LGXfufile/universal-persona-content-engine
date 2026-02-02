@@ -1,0 +1,23 @@
+{
+  "roleId": "role_d2e166ff",
+  "roleDescription": "程序员转型做自媒体",
+  "generatedAt": "2026-02-01T15:43:43.741Z",
+  "statistics": {
+    "titlesCount": 10,
+    "articlesCount": 3,
+    "imagesCount": 12,
+    "totalWords": 3883,
+    "avgWordsPerArticle": 1294
+  },
+  "outputPath": "/Users/guangxin/Documents/02_项目开发/前端项目/myGit/claude/20260130_1/upce_output/role_d2e166ff",
+  "files": {
+    "analysisReport": "analysis_report.md",
+    "completeReport": "complete_report.md",
+    "titlesList": "titles.txt",
+    "articlesDir": "articles/",
+    "imagesDir": "images/",
+    "publishReadyDir": "publish_ready/",
+    "imagePrompts": "image_prompts.json",
+    "statistics": "generation_stats.json"
+  }
+}

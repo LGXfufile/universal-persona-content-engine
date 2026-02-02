@@ -1,0 +1,23 @@
+{
+  "roleId": "role_92e160de",
+  "roleDescription": "十八线小城市宝妈，想买车",
+  "generatedAt": "2026-02-01T15:14:28.997Z",
+  "statistics": {
+    "titlesCount": 10,
+    "articlesCount": 3,
+    "imagesCount": 12,
+    "totalWords": 3892,
+    "avgWordsPerArticle": 1297
+  },
+  "outputPath": "/Users/guangxin/Documents/02_项目开发/前端项目/myGit/claude/20260130_1/upce_output/role_92e160de",
+  "files": {
+    "analysisReport": "analysis_report.md",
+    "completeReport": "complete_report.md",
+    "titlesList": "titles.txt",
+    "articlesDir": "articles/",
+    "imagesDir": "images/",
+    "publishReadyDir": "publish_ready/",
+    "imagePrompts": "image_prompts.json",
+    "statistics": "generation_stats.json"
+  }
+}

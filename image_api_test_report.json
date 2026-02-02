@@ -1,0 +1,83 @@
+{
+  "timestamp": "2026-01-31T15:57:27.078Z",
+  "results": {
+    "deepseek": [
+      {
+        "success": true,
+        "textResponse": "由于我无法直接生成图片，我将为您提供一个详细的文字描述，您可以根据这个描述使用AI绘画工具（如DALL·E、MidJourney、Stable Diffusion等）来生成图像：\n\n**画面主体：**\n- 一个20岁左右的年轻人，穿着舒适的居家服（如浅色卫衣或T恤），坐在家中的书桌前。\n- 书桌靠窗，窗外有柔和的阳光透过半透明的白色窗帘洒入室内。\n- 桌上有一",
+        "response": {
+          "id": "b53e46ab-0ac9-4f48-8abf-7fec677aeee9",
+          "object": "chat.completion",
+          "created": 1769875019,
+          "model": "deepseek-chat",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "由于我无法直接生成图片，我将为您提供一个详细的文字描述，您可以根据这个描述使用AI绘画工具（如DALL·E、MidJourney、Stable Diffusion等）来生成图像：\n\n**画面主体：**\n- 一个20岁左右的年轻人，穿着舒适的居家服（如浅色卫衣或T恤），坐在家中的书桌前。\n- 书桌靠窗，窗外有柔和的阳光透过半透明的白色窗帘洒入室内。\n- 桌上有一"
+              },
+              "logprobs": null,
+              "finish_reason": "length"
+            }
+          ],
+          "usage": {
+            "prompt_tokens": 27,
+            "completion_tokens": 100,
+            "total_tokens": 127,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 27
+          },
+          "system_fingerprint": "fp_eaab8d114b_prod0820_fp8_kvcache"
+        }
+      }
+    ],
+    "dashscope": [
+      {
+        "success": true,
+        "imageUrl": "https://dashscope-result-sh.oss-cn-shanghai.aliyuncs.com/7d/47/20260131/d23adf3d/150e29de-ad26-44f6-abf4-fb10e506fe861314145838.png?Expires=1770480842&OSSAccessKeyId=LTAI5tKPD3TMqf2Lna1fASuh&Signature=VLyKLtkPkKKwsWMJXr1tsDO%2B5tQ%3D",
+        "response": {
+          "output": {
+            "choices": [
+              {
+                "finish_reason": "stop",
+                "message": {
+                  "content": [
+                    {
+                      "image": "https://dashscope-result-sh.oss-cn-shanghai.aliyuncs.com/7d/47/20260131/d23adf3d/150e29de-ad26-44f6-abf4-fb10e506fe861314145838.png?Expires=1770480842&OSSAccessKeyId=LTAI5tKPD3TMqf2Lna1fASuh&Signature=VLyKLtkPkKKwsWMJXr1tsDO%2B5tQ%3D"
+                    }
+                  ],
+                  "role": "assistant"
+                }
+              }
+            ],
+            "task_metric": {
+              "FAILED": 0,
+              "SUCCEEDED": 1,
+              "TOTAL": 1
+            }
+          },
+          "usage": {
+            "height": 928,
+            "image_count": 1,
+            "width": 1664
+          },
+          "request_id": "150e29de-ad26-44f6-abf4-fb10e506fe86"
+        }
+      }
+    ],
+    "openai": [
+      {
+        "success": false,
+        "error": "API Key未配置"
+      }
+    ]
+  },
+  "summary": {
+    "totalTests": 3,
+    "successfulTests": 2
+  }
+}

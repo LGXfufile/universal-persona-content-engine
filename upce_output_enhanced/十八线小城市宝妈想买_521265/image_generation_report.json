@@ -1,0 +1,32 @@
+{
+  "总计": 3,
+  "成功": 0,
+  "失败": 3,
+  "成功率": "0.0%",
+  "详情": [
+    {
+      "filename": "image_1.jpg",
+      "prompt": "专业的信息图表，展示十八线小城市宝妈想买车的成功案例，现代扁平化设计，蓝橙配色，中文文字，商业风格",
+      "description": "十八线小城市宝妈想买车月入5000的真实经历配图",
+      "status": "failed",
+      "error": "Request failed with status code 400",
+      "path": null
+    },
+    {
+      "filename": "image_2.jpg",
+      "prompt": "专业的信息图表，展示十八线小城市宝妈想买车的成功案例，现代扁平化设计，蓝橙配色，中文文字，商业风格",
+      "description": "别再被骗了！十八线小城市宝妈想买车最适合这3个项目配图",
+      "status": "failed",
+      "error": "Request failed with status code 400",
+      "path": null
+    },
+    {
+      "filename": "image_3.jpg",
+      "prompt": "专业的信息图表，展示十八线小城市宝妈想买车的成功案例，现代扁平化设计，蓝橙配色，中文文字，商业风格",
+      "description": "十八线小城市宝妈想买车副业指南：从0到月入过万配图",
+      "status": "failed",
+      "error": "Request failed with status code 400",
+      "path": null
+    }
+  ]
+}

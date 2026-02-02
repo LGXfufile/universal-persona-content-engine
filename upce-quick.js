@@ -4,11 +4,12 @@ const fs = require('fs-extra');
 const path = require('path');
 const crypto = require('crypto');
 const axios = require('axios');
+const prompts = require('./prompts');
 
 class UPCEQuickTest {
   constructor() {
-    this.apiKey = 'sk-71cc3aad8fad44c8970dd549933d3573';
-    this.baseURL = 'https://api.deepseek.com/v1';
+    this.apiKey = process.env.DEEPSEEK_API_KEY || 'sk-613c035207a848529bfae4308cce4515';
+    this.baseURL = 'https://api.deepseek.com';
     this.outputDir = path.join(__dirname, 'upce_output');
     this.config = {
       titleCount: 10, // 减少到10个标题快速测试
@@ -27,16 +28,7 @@ class UPCEQuickTest {
   async analyzeRole(roleDescription) {
     console.log('🧠 开始角色深度分析...');
     
-    const prompt = `请深度分析以下角色群体：${roleDescription}
-
-请从以下维度进行分析：
-1. 深层情绪分析（恐惧、羞耻、希望、孤独、愧疚）- 用"高/中/低"评级
-2. 核心需求识别（3个最重要的未被满足需求）
-3. 内容切入点（3个具有冲突性和反常识的角度）
-4. 高商业意图关键词（10个）
-5. 四层产品变现模型设计（免费、99元、2980元、9800元）
-
-请用简洁的格式返回结果。`;
+    const prompt = prompts.quick.roleAnalysis(roleDescription);
 
     try {
       const response = await axios.post(`${this.baseURL}/chat/completions`, {
@@ -44,7 +36,7 @@ class UPCEQuickTest {
         messages: [
           {
             role: "system",
-            content: "你是一个专业的用户画像分析师和内容营销专家。请用简洁明了的格式回答。"
+            content: prompts.quick.roleAnalysisSystem
           },
           {
             role: "user",
@@ -63,11 +55,38 @@ class UPCEQuickTest {
 
       const analysisText = response.data.choices[0].message.content;
       
+      // 尝试解析JSON，如果失败则使用文本
+      let analysis;
+      try {
+        // 清理可能的markdown格式
+        let cleanText = analysisText;
+        
+        // 移除markdown代码块标记
+        if (cleanText.includes('```json')) {
+          cleanText = cleanText.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
+        }
+        if (cleanText.includes('```')) {
+          cleanText = cleanText.replace(/```\s*/g, '');
+        }
+        
+        // 尝试提取JSON部分
+        const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          cleanText = jsonMatch[0];
+        }
+        
+        analysis = JSON.parse(cleanText.trim());
+        console.log('✅ JSON解析成功');
+      } catch (e) {
+        console.log('⚠️ JSON解析失败，使用文本格式');
+        analysis = { analysisText };
+      }
+      
       console.log('✅ 角色分析完成');
       return {
         roleId: this.generateRoleId(roleDescription),
         roleDescription,
-        analysisText,
+        analysis,
         timestamp: new Date().toISOString()
       };
 
@@ -119,16 +138,7 @@ class UPCEQuickTest {
   async generateTitles(roleData) {
     console.log(`📝 开始生成${this.config.titleCount}个标题...`);
     
-    const prompt = `基于角色"${roleData.roleDescription}"，生成${this.config.titleCount}个吸引人的自媒体文章标题。
-
-要求：
-1. 标题要有冲突感和好奇心
-2. 包含具体数字和时间
-3. 体现真实性和可操作性
-4. 符合该人群的语言习惯
-5. 每个标题不超过30字
-
-请直接返回标题列表，每行一个，不要编号。`;
+    const prompt = prompts.quick.titleGeneration(roleData.roleDescription);
 
     try {
       const response = await axios.post(`${this.baseURL}/chat/completions`, {
@@ -161,6 +171,14 @@ class UPCEQuickTest {
         .slice(0, this.config.titleCount);
 
       console.log(`✅ 标题生成完成，共 ${titles.length} 个`);
+      
+      // 显示前5个标题作为预览
+      console.log('\n📋 标题预览（前5个）:');
+      titles.slice(0, 5).forEach((title, index) => {
+        console.log(`   ${index + 1}. ${title}`);
+      });
+      console.log(`   ... 还有 ${titles.length - 5} 个标题\n`);
+      
       return titles;
 
     } catch (error) {
@@ -188,17 +206,7 @@ class UPCEQuickTest {
   async generateArticle(title, roleData, index) {
     console.log(`📄 生成文章 ${index}: ${title.substring(0, 20)}...`);
 
-    const prompt = `请基于标题"${title}"和角色"${roleData.roleDescription}"，写一篇1200字左右的自媒体文章。
-
-文章要求：
-1. 采用第一人称"我"的视角
-2. 开头：真实困境场景描述（200字）
-3. 中段：3-4个具体可操作的步骤（800字）
-4. 结尾：低门槛的行动引导（200字）
-5. 语言贴近目标人群，真实可信
-6. 在适当位置标注[配图：描述]
-
-请直接返回文章内容。`;
+    const prompt = prompts.quick.articleGeneration(title, roleData.roleDescription);
 
     try {
       const response = await axios.post(`${this.baseURL}/chat/completions`, {
@@ -387,7 +395,10 @@ ${roleData.analysisText}
     for (let i = 0; i < articles.length; i++) {
       const article = articles[i];
       const filename = `article_${String(i + 1).padStart(3, '0')}.md`;
-      await fs.writeFile(path.join(outputPath, 'articles', filename), article.content);
+      const filePath = path.join(outputPath, 'articles', filename);
+      await fs.writeFile(filePath, article.content);
+      
+      console.log(`📄 文章已保存: ${filePath}`);
       
       // 收集所有配图提示词
       allImagePrompts.push(...article.imagePrompts);

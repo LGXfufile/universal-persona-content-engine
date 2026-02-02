@@ -29,6 +29,23 @@ cd universal-persona-content-engine
 npm install
 ```
 
+### 🧪 图片生成测试（推荐）
+在使用完整版本前，建议先测试图片生成API是否配置正确：
+
+```bash
+# 一键测试图片生成API
+./test-images.sh
+
+# 或直接运行测试
+node test-image-api.js --quick
+```
+
+**测试结果指导：**
+- ✅ **API测试成功** → 使用完整版本：`node upce.js "角色描述"`
+- ❌ **API测试失败** → 使用演示版本：`node upce-demo.js "角色描述"`
+
+详细测试指南请查看：[IMAGE_TEST_GUIDE.md](IMAGE_TEST_GUIDE.md)
+
 ### 基础使用
 
 #### 1. 演示版本（推荐新手）
@@ -132,7 +149,7 @@ node upce-demo.js "25岁前端程序员，想做技术自媒体建立个人品�
 #### 1. DeepSeek API配置
 ```bash
 # 方法1：环境变量
-export DEEPSEEK_API_KEY="your_api_key_here"
+export DEEPSEEK_API_KEY="sk-613c035207a848529bfae4308cce4515"
 
 # 方法2：直接修改脚本中的apiKey变量
 ```
@@ -140,7 +157,7 @@ export DEEPSEEK_API_KEY="your_api_key_here"
 #### 2. 阿里云通义万相配置
 ```bash
 # 配置阿里云API密钥
-export DASHSCOPE_API_KEY="your_dashscope_api_key"
+export DASHSCOPE_API_KEY="sk-45097a3d1b244a2dab5ae991d50d7daf"
 ```
 
 ### 自定义配置

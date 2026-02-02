@@ -36,73 +36,73 @@ class FileExporter {
 
 ## 📊 生成概览
 
-- **角色描述**: ${roleData.roleDescription}
-- **角色ID**: ${roleData.roleId}
+- **角色描述**: ${roleData?.roleDescription || '未定义'}
+- **角色ID**: ${roleData?.roleId || '未定义'}
 - **生成时间**: ${new Date().toLocaleString('zh-CN')}
-- **标题数量**: ${titles.length}
-- **文章数量**: ${articles.length}
-- **总字数**: ${stats.statistics.totalWords.toLocaleString()}
-- **平均字数**: ${stats.statistics.avgWordsPerArticle}
+- **标题数量**: ${titles?.length || 0}
+- **文章数量**: ${articles?.length || 0}
+- **总字数**: ${stats?.statistics?.totalWords?.toLocaleString() || '0'}
+- **平均字数**: ${stats?.statistics?.avgWordsPerArticle || '0'}
 
 ## 🧠 角色分析
 
 ### 深层情绪分析
-${Object.entries(roleData.analysis.emotions).map(([emotion, level]) => 
+${roleData?.analysis?.emotions && typeof roleData.analysis.emotions === 'object' ? Object.entries(roleData.analysis.emotions).map(([emotion, level]) => 
   `- **${emotion}**: ${level}`
-).join('\n')}
+).join('\n') : '暂无情绪分析数据'}
 
 ### 核心需求
-${roleData.analysis.coreNeeds.map((need, index) => `${index + 1}. ${need}`).join('\n')}
+${roleData?.analysis?.coreNeeds ? roleData.analysis.coreNeeds.map((need, index) => `${index + 1}. ${need}`).join('\n') : '暂无核心需求数据'}
 
 ### 内容切入点
-${roleData.analysis.contentAngles.map((angle, index) => `${index + 1}. ${angle}`).join('\n')}
+${roleData?.analysis?.contentAngles ? roleData.analysis.contentAngles.map((angle, index) => `${index + 1}. ${angle}`).join('\n') : '暂无内容切入点数据'}
 
 ### 关键词库
-${roleData.analysis.keywords.map(keyword => `\`${keyword}\``).join(' | ')}
+${roleData?.analysis?.keywords ? roleData.analysis.keywords.map(keyword => `\`${keyword}\``).join(' | ') : '暂无关键词数据'}
 
 ### 产品变现模型
 
-${Object.entries(roleData.analysis.productModel).map(([tier, details]) => 
+${roleData?.analysis?.productModel && typeof roleData.analysis.productModel === 'object' ? Object.entries(roleData.analysis.productModel).map(([tier, details]) => 
   `#### ${tier}
-- **产品**: ${details.产品}
-- **价格**: ${details.价格}元
-- **转化率**: ${details.转化率}
+- **产品**: ${details?.产品 || '未定义'}
+- **价格**: ${details?.价格 || '0'}元
+- **转化率**: ${details?.转化率 || '0%'}
 `
-).join('\n')}
+).join('\n') : '暂无产品变现模型数据'}
 
 ## 📝 标题列表
 
-${titles.map((title, index) => `${index + 1}. ${title}`).join('\n')}
+${titles?.length ? titles.map((title, index) => `${index + 1}. ${title}`).join('\n') : '暂无标题数据'}
 
 ## 📚 文章预览
 
-${articles.slice(0, 5).map((article, index) => `
-### 文章 ${index + 1}: ${article.title}
+${articles?.length ? articles.slice(0, 5).map((article, index) => `
+### 文章 ${index + 1}: ${article?.title || '未命名文章'}
 
-**字数**: ${article.wordCount}
-**配图数量**: ${article.imagePrompts.length}
+**字数**: ${article?.wordCount || 0}
+**配图数量**: ${article?.imagePrompts?.length || 0}
 
 **内容预览**:
-${article.content.substring(0, 200)}...
+${article?.content ? article.content.substring(0, 200) : '暂无内容'}...
 
 ---
-`).join('\n')}
+`).join('\n') : '暂无文章数据'}
 
-${articles.length > 5 ? `\n*还有 ${articles.length - 5} 篇文章，请查看articles目录获取完整内容*\n` : ''}
+${articles?.length > 5 ? `\n*还有 ${articles.length - 5} 篇文章，请查看articles目录获取完整内容*\n` : ''}
 
 ## 🎨 配图信息
 
-本次生成共包含 ${articles.reduce((sum, article) => sum + article.imagePrompts.length, 0)} 张配图，涵盖以下场景：
+本次生成共包含 ${articles?.length ? articles.reduce((sum, article) => sum + (article?.imagePrompts?.length || 0), 0) : 0} 张配图，涵盖以下场景：
 
-${articles.slice(0, 3).map((article, index) => `
+${articles?.length ? articles.slice(0, 3).map((article, index) => `
 ### 文章 ${index + 1} 配图
-${article.imagePrompts.map(img => `- ${img.description}: \`${img.filename}\``).join('\n')}
-`).join('\n')}
+${article?.imagePrompts?.length ? article.imagePrompts.map(img => `- ${img?.description || '未命名'}: \`${img?.filename || '未知文件'}\``).join('\n') : '暂无配图'}
+`).join('\n') : '暂无配图数据'}
 
 ## 📁 文件结构
 
 \`\`\`
-${roleData.roleId}/
+${roleData?.roleId || 'unknown'}/
 ├── analysis_report.md          # 角色分析报告
 ├── titles.txt                  # 标题列表
 ├── complete_report.md          # 完整报告（本文件）
@@ -154,27 +154,27 @@ ${roleData.roleId}/
   async generateJsonExport(roleData, titles, articles, stats, outputPath) {
     const jsonData = {
       metadata: {
-        roleId: roleData.roleId,
-        roleDescription: roleData.roleDescription,
+        roleId: roleData?.roleId || 'unknown',
+        roleDescription: roleData?.roleDescription || '未定义',
         generatedAt: new Date().toISOString(),
         version: "1.0.0",
         generator: "UPCE"
       },
-      analysis: roleData.analysis,
+      analysis: roleData?.analysis || {},
       content: {
-        titles: titles,
-        articles: articles.map(article => ({
-          title: article.title,
-          content: article.content,
-          wordCount: article.wordCount,
-          images: article.imagePrompts.map(img => ({
-            filename: img.filename,
-            description: img.description,
-            prompt: img.prompt
+        titles: titles || [],
+        articles: (articles || []).map(article => ({
+          title: article?.title || '未命名文章',
+          content: article?.content || '',
+          wordCount: article?.wordCount || 0,
+          images: (article?.imagePrompts || []).map(img => ({
+            filename: img?.filename || '未知文件',
+            description: img?.description || '未命名',
+            prompt: img?.prompt || ''
           }))
         }))
       },
-      statistics: stats.statistics
+      statistics: stats?.statistics || {}
     };
 
     const jsonPath = path.join(outputPath, 'export_data.json');
@@ -186,26 +186,34 @@ ${roleData.roleId}/
   async generateTextExport(roleData, titles, articles, outputPath) {
     let textContent = `UPCE内容生成导出\n`;
     textContent += `${'='.repeat(50)}\n\n`;
-    textContent += `角色描述: ${roleData.roleDescription}\n`;
+    textContent += `角色描述: ${roleData?.roleDescription || '未定义'}\n`;
     textContent += `生成时间: ${new Date().toLocaleString('zh-CN')}\n`;
-    textContent += `标题数量: ${titles.length}\n`;
-    textContent += `文章数量: ${articles.length}\n\n`;
+    textContent += `标题数量: ${titles?.length || 0}\n`;
+    textContent += `文章数量: ${articles?.length || 0}\n\n`;
 
     textContent += `标题列表:\n`;
     textContent += `${'-'.repeat(30)}\n`;
-    titles.forEach((title, index) => {
-      textContent += `${index + 1}. ${title}\n`;
-    });
+    if (titles?.length) {
+      titles.forEach((title, index) => {
+        textContent += `${index + 1}. ${title}\n`;
+      });
+    } else {
+      textContent += `暂无标题数据\n`;
+    }
 
     textContent += `\n\n文章内容:\n`;
     textContent += `${'-'.repeat(30)}\n`;
-    articles.forEach((article, index) => {
-      textContent += `\n[文章 ${index + 1}] ${article.title}\n`;
-      textContent += `字数: ${article.wordCount}\n`;
-      textContent += `${'-'.repeat(20)}\n`;
-      textContent += article.content.replace(/!\[.*?\]\(.*?\)/g, '[图片]');
-      textContent += `\n${'='.repeat(50)}\n`;
-    });
+    if (articles?.length) {
+      articles.forEach((article, index) => {
+        textContent += `\n[文章 ${index + 1}] ${article?.title || '未命名文章'}\n`;
+        textContent += `字数: ${article?.wordCount || 0}\n`;
+        textContent += `${'-'.repeat(20)}\n`;
+        textContent += (article?.content || '暂无内容').replace(/!\[.*?\]\(.*?\)/g, '[图片]');
+        textContent += `\n${'='.repeat(50)}\n`;
+      });
+    } else {
+      textContent += `暂无文章数据\n`;
+    }
 
     const textPath = path.join(outputPath, 'export_content.txt');
     await fs.writeFile(textPath, textContent);

@@ -2,12 +2,56 @@ const axios = require('axios');
 const fs = require('fs-extra');
 const path = require('path');
 
+// 简单限流器
+class SimpleRateLimiter {
+  constructor() {
+    this.lastCall = new Map();
+    this.delays = {
+      aliyun: 8000,    // 阿里云API 8秒间隔
+    };
+    this.consecutiveErrors = new Map();
+  }
+
+  async waitIfNeeded(apiType) {
+    const lastTime = this.lastCall.get(apiType) || 0;
+    const elapsed = Date.now() - lastTime;
+    const errorCount = this.consecutiveErrors.get(apiType) || 0;
+    
+    // 根据连续错误次数动态调整延迟
+    const baseDelay = this.delays[apiType];
+    const adaptiveDelay = baseDelay * Math.pow(1.5, errorCount);
+    const finalDelay = Math.min(adaptiveDelay, 30000); // 最大30秒
+    
+    if (elapsed < finalDelay) {
+      const waitTime = finalDelay - elapsed;
+      console.log(`⏳ API限流等待 ${waitTime/1000}秒 (${apiType})`);
+      await this.sleep(waitTime);
+    }
+    
+    this.lastCall.set(apiType, Date.now());
+  }
+
+  recordSuccess(apiType) {
+    this.consecutiveErrors.set(apiType, 0);
+  }
+
+  recordError(apiType) {
+    const current = this.consecutiveErrors.get(apiType) || 0;
+    this.consecutiveErrors.set(apiType, current + 1);
+  }
+
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+}
+
 class AliyunImageGenerator {
   constructor() {
     // 阿里云通义万相API配置
-    this.apiKey = process.env.DASHSCOPE_API_KEY || 'sk-71cc3aad8fad44c8970dd549933d3573';
-    this.baseURL = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis';
+    this.apiKey = process.env.DASHSCOPE_API_KEY || 'sk-45097a3d1b244a2dab5ae991d50d7daf';
+    this.baseURL = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation';
     this.maxRetries = 3;
+    this.rateLimiter = new SimpleRateLimiter();
   }
 
   // 生成图片
@@ -16,29 +60,39 @@ class AliyunImageGenerator {
 
     for (let retry = 0; retry < this.maxRetries; retry++) {
       try {
+        // 应用限流策略
+        await this.rateLimiter.waitIfNeeded('aliyun');
+
         const response = await axios.post(this.baseURL, {
-          model: "wanx-v1",
+          model: "qwen-image-max",
           input: {
-            prompt: this.optimizePrompt(prompt),
-            negative_prompt: "低质量,模糊,变形,文字,水印,logo,商标,奢侈品,豪车,名牌",
-            style: "<photography>",
-            size: "1024*1024",
-            n: 1,
-            seed: Math.floor(Math.random() * 1000000)
+            messages: [
+              {
+                role: "user",
+                content: [
+                  {
+                    text: this.optimizePrompt(prompt)
+                  }
+                ]
+              }
+            ]
           },
           parameters: {
-            style: "<photography>",
-            size: "1024*1024",
-            n: 1
+            negative_prompt: "低分辨率，低画质，肢体畸形，手指畸形，画面过饱和，蜡像感，人脸无细节，过度光滑，画面具有AI感。构图混乱。文字模糊，扭曲。",
+            prompt_extend: true,
+            watermark: false,
+            size: "1664*928"
           }
         }, {
           headers: {
             'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-            'X-DashScope-Async': 'enable'
+            'Content-Type': 'application/json'
           },
           timeout: 30000
         });
+
+        // 记录成功
+        this.rateLimiter.recordSuccess('aliyun');
 
         if (response.data.output && response.data.output.task_id) {
           // 异步任务，需要轮询结果
@@ -49,16 +103,38 @@ class AliyunImageGenerator {
             const imagePath = await this.downloadAndSaveImage(result.imageUrl, filename, outputDir);
             console.log(`✅ 图片生成成功: ${filename}`);
             return { success: true, path: imagePath, prompt };
+          } else {
+            console.log(`❌ 异步任务失败: ${result.error}`);
+            return { success: false, error: result.error, prompt };
           }
-        } else if (response.data.output && response.data.output.results) {
-          // 同步返回结果
+        } else if (response.data.output && response.data.output.results && response.data.output.results[0]) {
+          // 同步返回结果 - 新API格式
           const imageUrl = response.data.output.results[0].url;
           const imagePath = await this.downloadAndSaveImage(imageUrl, filename, outputDir);
           console.log(`✅ 图片生成成功: ${filename}`);
           return { success: true, path: imagePath, prompt };
+        } else if (response.data.output && response.data.output.image_url) {
+          // 新API直接返回图片URL
+          const imageUrl = response.data.output.image_url;
+          const imagePath = await this.downloadAndSaveImage(imageUrl, filename, outputDir);
+          console.log(`✅ 图片生成成功: ${filename}`);
+          return { success: true, path: imagePath, prompt };
+        } else if (response.data.output && response.data.output.choices && response.data.output.choices[0] && response.data.output.choices[0].message && response.data.output.choices[0].message.content && response.data.output.choices[0].message.content[0] && response.data.output.choices[0].message.content[0].image) {
+          // 阿里云新格式 - choices数组中的图片
+          const imageUrl = response.data.output.choices[0].message.content[0].image;
+          const imagePath = await this.downloadAndSaveImage(imageUrl, filename, outputDir);
+          console.log(`✅ 图片生成成功: ${filename}`);
+          return { success: true, path: imagePath, prompt };
+        } else {
+          console.log(`⚠️ 响应格式未知:`);
+          console.log(JSON.stringify(response.data, null, 2));
+          return { success: false, error: '响应格式未知', prompt };
         }
 
       } catch (error) {
+        // 记录错误
+        this.rateLimiter.recordError('aliyun');
+        
         console.log(`⚠️  图片生成失败 (尝试 ${retry + 1}/${this.maxRetries}): ${error.message}`);
         
         if (retry === this.maxRetries - 1) {
@@ -68,10 +144,15 @@ class AliyunImageGenerator {
           return { success: false, path: placeholderPath, error: error.message, prompt };
         }
         
-        // 等待后重试
+        // 等待后重试（额外的重试延迟）
         await new Promise(resolve => setTimeout(resolve, 2000 * (retry + 1)));
       }
     }
+    
+    // 如果所有重试都失败，返回失败结果
+    const placeholderPath = await this.createPlaceholder(filename, outputDir, prompt);
+    console.log(`📝 所有重试失败，已创建占位图片: ${filename}`);
+    return { success: false, path: placeholderPath, error: '所有重试失败', prompt };
   }
 
   // 优化提示词
@@ -176,22 +257,35 @@ class AliyunImageGenerator {
       const imagePrompt = imagePrompts[i];
       console.log(`进度: ${i + 1}/${imagePrompts.length}`);
 
-      const result = await this.generateImage(
-        imagePrompt.prompt,
-        imagePrompt.filename,
-        outputDir
-      );
+      try {
+        const result = await this.generateImage(
+          imagePrompt.prompt,
+          imagePrompt.filename,
+          outputDir
+        );
 
-      if (result.success) {
-        results.successful.push(result);
-      } else {
-        results.failed.push(result);
+        if (result && result.success) {
+          results.successful.push(result);
+        } else {
+          results.failed.push({
+            filename: imagePrompt.filename,
+            prompt: imagePrompt.prompt,
+            error: result?.error || '生成失败',
+            success: false
+          });
+        }
+      } catch (error) {
+        console.log(`❌ 图片生成异常: ${imagePrompt.filename} - ${error.message}`);
+        results.failed.push({
+          filename: imagePrompt.filename,
+          prompt: imagePrompt.prompt,
+          error: error.message,
+          success: false
+        });
       }
 
-      // 避免API限制
-      if (i < imagePrompts.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
+      // 批量生成间隔 - 已经在generateImage中通过rateLimiter处理
+      // 这里不需要额外延迟
     }
 
     const successRate = ((results.successful.length / results.total) * 100).toFixed(1);

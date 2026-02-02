@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "roleId": "test_002",
+    "roleDescription": "未定义",
+    "generatedAt": "2026-01-31T22:25:17.135Z",
+    "version": "1.0.0",
+    "generator": "UPCE"
+  },
+  "analysis": {},
+  "content": {
+    "titles": [],
+    "articles": [
+      {
+        "title": "未命名文章",
+        "content": "",
+        "wordCount": 0,
+        "images": []
+      }
+    ]
+  },
+  "statistics": {}
+}

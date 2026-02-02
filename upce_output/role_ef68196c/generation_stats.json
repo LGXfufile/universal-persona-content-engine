@@ -1,0 +1,23 @@
+{
+  "roleId": "role_ef68196c",
+  "roleDescription": "25岁程序员想做技术自媒体",
+  "generatedAt": "2026-01-31T11:24:31.140Z",
+  "statistics": {
+    "titlesCount": 10,
+    "articlesCount": 3,
+    "imagesCount": 12,
+    "totalWords": 3895,
+    "avgWordsPerArticle": 1298
+  },
+  "outputPath": "/Users/guangxin/Documents/02_项目开发/前端项目/myGit/claude/20260130_1/upce_output/role_ef68196c",
+  "files": {
+    "analysisReport": "analysis_report.md",
+    "completeReport": "complete_report.md",
+    "titlesList": "titles.txt",
+    "articlesDir": "articles/",
+    "imagesDir": "images/",
+    "publishReadyDir": "publish_ready/",
+    "imagePrompts": "image_prompts.json",
+    "statistics": "generation_stats.json"
+  }
+}

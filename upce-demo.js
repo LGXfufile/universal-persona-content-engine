@@ -98,6 +98,14 @@ class UPCEDemo {
     ];
 
     console.log(`✅ 标题生成完成，共 ${titles.length} 个`);
+    
+    // 显示前5个标题作为预览
+    console.log('\n📋 标题预览（前5个）:');
+    titles.slice(0, 5).forEach((title, index) => {
+      console.log(`   ${index + 1}. ${title}`);
+    });
+    console.log(`   ... 还有 ${titles.length - 5} 个标题\n`);
+    
     return titles;
   }
 
@@ -264,7 +272,11 @@ class UPCEDemo {
     for (let i = 0; i < articles.length; i++) {
       const article = articles[i];
       const filename = `article_${String(i + 1).padStart(3, '0')}.md`;
-      await fs.writeFile(path.join(outputPath, 'articles', filename), article.content);
+      const filePath = path.join(outputPath, 'articles', filename);
+      await fs.writeFile(filePath, article.content);
+      
+      console.log(`📄 文章已保存: ${filePath}`);
+      
       allImagePrompts.push(...article.imagePrompts);
     }
 

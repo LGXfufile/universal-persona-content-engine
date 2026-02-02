@@ -6,14 +6,17 @@ const crypto = require('crypto');
 const axios = require('axios');
 const AliyunImageGenerator = require('./AliyunImageGenerator');
 const FileExporter = require('./FileExporter');
+const Logger = require('./Logger');
+const prompts = require('./prompts');
 
 class UPCEEngine {
   constructor() {
-    this.apiKey = 'sk-71cc3aad8fad44c8970dd549933d3573';
-    this.baseURL = 'https://api.deepseek.com/v1';
+    this.apiKey = process.env.DEEPSEEK_API_KEY || 'sk-613c035207a848529bfae4308cce4515';
+    this.baseURL = 'https://api.deepseek.com';
     this.outputDir = path.join(__dirname, 'upce_output');
     this.imageGenerator = new AliyunImageGenerator();
     this.fileExporter = new FileExporter();
+    this.logger = null; // 将在run方法中初始化
     this.config = {
       titleCount: 100,
       maxRetries: 3,
@@ -35,26 +38,19 @@ class UPCEEngine {
 
   // 角色深度分析
   async analyzeRole(roleDescription) {
-    console.log('🧠 开始角色深度分析...');
+    this.logger.stepStart('角色深度分析', '分析目标用户群体的深层需求和痛点');
     
-    const prompt = `请深度分析以下角色群体：${roleDescription}
-
-请从以下维度进行分析：
-1. 深层情绪分析（恐惧、羞耻、希望、孤独、愧疚）
-2. 核心需求识别（3个最重要的未被满足需求）
-3. 内容切入点（3个具有冲突性和反常识的角度）
-4. 高商业意图关键词（20个）
-5. 四层产品变现模型设计
-
-请用JSON格式返回结果。`;
+    const prompt = prompts.roleAnalysis(roleDescription);
 
     try {
+      this.logger.apiCall('DeepSeek Chat', this.baseURL + '/chat/completions', { model: 'deepseek-chat' });
+      
       const response = await axios.post(`${this.baseURL}/chat/completions`, {
         model: "deepseek-chat",
         messages: [
           {
             role: "system",
-            content: "你是一个专业的用户画像分析师和内容营销专家，擅长深度分析目标人群的心理需求和商业价值。"
+            content: prompts.roleAnalysisSystem
           },
           {
             role: "user",
@@ -75,21 +71,46 @@ class UPCEEngine {
       // 尝试解析JSON，如果失败则创建结构化数据
       let analysis;
       try {
-        analysis = JSON.parse(analysisText);
+        // 清理可能的markdown格式
+        let cleanText = analysisText;
+        
+        // 移除markdown代码块标记
+        if (cleanText.includes('```json')) {
+          cleanText = cleanText.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
+        }
+        if (cleanText.includes('```')) {
+          cleanText = cleanText.replace(/```\s*/g, '');
+        }
+        
+        // 尝试提取JSON部分
+        const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          cleanText = jsonMatch[0];
+        }
+        
+        analysis = JSON.parse(cleanText.trim());
       } catch (e) {
+        this.logger.warning('JSON解析失败，使用文本解析', { error: e.message });
         analysis = this.parseAnalysisText(analysisText, roleDescription);
       }
 
-      console.log('✅ 角色分析完成');
-      return {
+      const result = {
         roleId: this.generateRoleId(roleDescription),
         roleDescription,
         analysis,
         timestamp: new Date().toISOString()
       };
 
+      this.logger.stepComplete('角色深度分析', { roleId: result.roleId });
+      this.logger.apiResponse('DeepSeek Chat', true, { responseLength: analysisText.length });
+      
+      return result;
+
     } catch (error) {
-      console.error('❌ 角色分析失败:', error.message);
+      this.logger.stepFailed('角色深度分析', error);
+      this.logger.apiResponse('DeepSeek Chat', false, { error: error.message });
+      
+      this.logger.warning('使用备用分析数据');
       return this.createFallbackAnalysis(roleDescription);
     }
   }
@@ -159,16 +180,7 @@ class UPCEEngine {
 
     // 使用AI生成更多创意标题
     for (let batch = 0; batch < 5; batch++) {
-      const prompt = `基于角色"${roleData.roleDescription}"，生成20个吸引人的自媒体文章标题。
-
-要求：
-1. 标题要有冲突感和好奇心
-2. 包含具体数字和时间
-3. 体现真实性和可操作性
-4. 符合该人群的语言习惯
-5. 每个标题不超过30字
-
-请直接返回标题列表，每行一个。`;
+      const prompt = prompts.titleGeneration(roleData.roleDescription, roleData.analysis);
 
       try {
         const response = await axios.post(`${this.baseURL}/chat/completions`, {
@@ -176,7 +188,7 @@ class UPCEEngine {
           messages: [
             {
               role: "system", 
-              content: "你是一个专业的自媒体标题创作专家，擅长创作高点击率的爆文标题。"
+              content: prompts.titleGenerationSystem
             },
             {
               role: "user",
@@ -229,6 +241,14 @@ class UPCEEngine {
     const uniqueTitles = [...new Set(titles)].slice(0, this.config.titleCount);
     
     console.log(`✅ 标题生成完成，共 ${uniqueTitles.length} 个`);
+    
+    // 显示前5个标题作为预览
+    console.log('\n📋 标题预览（前5个）:');
+    uniqueTitles.slice(0, 5).forEach((title, index) => {
+      console.log(`   ${index + 1}. ${title}`);
+    });
+    console.log(`   ... 还有 ${uniqueTitles.length - 5} 个标题\n`);
+    
     return uniqueTitles;
   }
 
@@ -236,18 +256,7 @@ class UPCEEngine {
   async generateArticle(title, roleData, index) {
     console.log(`📄 生成文章 ${index}: ${title.substring(0, 20)}...`);
 
-    const prompt = `请基于标题"${title}"和角色"${roleData.roleDescription}"，写一篇完整的自媒体文章。
-
-文章要求：
-1. 采用第一人称"我"的视角
-2. 开头：真实困境场景描述
-3. 中段：3-5个具体可操作的步骤
-4. 结尾：低门槛的行动引导
-5. 全文1500-2000字
-6. 语言贴近目标人群
-7. 在关键位置标注[配图位置：描述]
-
-请直接返回文章内容。`;
+    const prompt = prompts.articleGeneration(title, roleData.roleDescription, roleData.analysis);
 
     try {
       const response = await axios.post(`${this.baseURL}/chat/completions`, {
@@ -255,7 +264,7 @@ class UPCEEngine {
         messages: [
           {
             role: "system",
-            content: "你是一个专业的自媒体内容创作者，擅长写出引人共鸣的真实故事和实用指南。"
+            content: prompts.articleGenerationSystem
           },
           {
             role: "user", 
@@ -273,38 +282,59 @@ class UPCEEngine {
 
       let content = response.data.choices[0].message.content;
       
-      // 处理配图标记
+      // 处理配图标记 - 支持多种格式
       const imagePrompts = [];
       let imageIndex = 1;
       
-      content = content.replace(/\[配图位置：([^\]]+)\]/g, (match, description) => {
-        const imageName = `image_${roleData.roleId}_${String(index).padStart(3, '0')}_${imageIndex}.jpg`;
-        imagePrompts.push({
-          filename: imageName,
-          description: description,
-          prompt: this.generateImagePrompt(roleData, description)
+      // 匹配多种配图标记格式
+      const imagePatterns = [
+        /\[配图位置：([^\]]+)\]/g,
+        /\[配图：([^\]]+)\]/g,
+        /\[配图\d+：([^\]]+)\]/g,
+        /配图\d+：([^\n]+)/g
+      ];
+      
+      imagePatterns.forEach(pattern => {
+        content = content.replace(pattern, (match, description) => {
+          const imageName = `image_${roleData.roleId}_${String(index).padStart(3, '0')}_${imageIndex}.jpg`;
+          imagePrompts.push({
+            filename: imageName,
+            description: description,
+            prompt: this.generateImagePrompt(roleData, description)
+          });
+          imageIndex++;
+          return `\n\n![${description}](./images/${imageName})\n\n`;
         });
-        imageIndex++;
-        return `\n\n![${description}](./images/${imageName})\n\n`;
       });
 
-      // 如果没有配图标记，自动添加
+      // 如果没有找到配图标记，强制添加默认配图
       if (imagePrompts.length === 0) {
+        console.log(`⚠️ 文章 ${index} 未检测到配图标记，添加默认配图`);
+        
+        // 在文章开头、中间、结尾添加配图
         const defaultImages = [
-          { desc: "开头场景图", pos: "## " },
-          { desc: "操作步骤图", pos: "### " },
-          { desc: "结果展示图", pos: "## 我的" }
+          { desc: `${roleData.roleDescription}的真实生活场景`, insertAfter: "# " },
+          { desc: `${roleData.roleDescription}的具体操作步骤展示`, insertAfter: "## " },
+          { desc: `${roleData.roleDescription}获得成功后的状态`, insertAfter: "### " }
         ];
 
         defaultImages.forEach((img, idx) => {
-          if (content.includes(img.pos)) {
-            const imageName = `image_${roleData.roleId}_${String(index).padStart(3, '0')}_${idx + 1}.jpg`;
-            imagePrompts.push({
-              filename: imageName,
-              description: img.desc,
-              prompt: this.generateImagePrompt(roleData, img.desc)
-            });
+          const imageName = `image_${roleData.roleId}_${String(index).padStart(3, '0')}_${idx + 1}.jpg`;
+          imagePrompts.push({
+            filename: imageName,
+            description: img.desc,
+            prompt: this.generateImagePrompt(roleData, img.desc)
+          });
+          
+          // 在适当位置插入图片标记
+          const lines = content.split('\n');
+          for (let i = 0; i < lines.length; i++) {
+            if (lines[i].startsWith(img.insertAfter) && i < lines.length - 1) {
+              lines.splice(i + 1, 0, `\n![${img.desc}](./images/${imageName})\n`);
+              break;
+            }
           }
+          content = lines.join('\n');
         });
       }
 
@@ -435,13 +465,26 @@ class UPCEEngine {
   // 保存输出文件
   async saveOutput(roleData, titles, articles) {
     const outputPath = path.join(this.outputDir, roleData.roleId);
+    
+    this.logger.info('📁 开始创建输出目录', { outputPath });
     await fs.ensureDir(outputPath);
     await fs.ensureDir(path.join(outputPath, 'articles'));
     await fs.ensureDir(path.join(outputPath, 'images'));
+    
+    // 验证目录创建成功
+    const articlesDir = path.join(outputPath, 'articles');
+    const articlesDirExists = await fs.pathExists(articlesDir);
+    this.logger.info('📂 目录创建状态', { 
+      outputPath: await fs.pathExists(outputPath),
+      articlesDir: articlesDirExists,
+      imagesDir: await fs.pathExists(path.join(outputPath, 'images'))
+    });
 
     console.log('💾 保存输出文件...');
+    this.logger.info('💾 开始保存所有输出文件');
 
     // 保存角色分析报告
+    this.logger.info('📝 开始保存角色分析报告');
     const analysisReport = `# ${roleData.roleDescription} - 角色分析报告
 
 ## 基本信息
@@ -450,23 +493,23 @@ class UPCEEngine {
 - **角色描述**: ${roleData.roleDescription}
 
 ## 深层情绪分析
-${Object.entries(roleData.analysis.emotions).map(([emotion, level]) => 
+${Object.entries(roleData.analysis.emotions || {}).map(([emotion, level]) => 
   `- **${emotion}**: ${level}`
 ).join('\n')}
 
 ## 核心需求
-${roleData.analysis.coreNeeds.map(need => `- ${need}`).join('\n')}
+${(roleData.analysis.coreNeeds || []).map(need => `- ${need}`).join('\n')}
 
 ## 内容切入点
-${roleData.analysis.contentAngles.map(angle => `- ${angle}`).join('\n')}
+${(roleData.analysis.contentAngles || []).map(angle => `- ${angle}`).join('\n')}
 
 ## 关键词库
-${roleData.analysis.keywords.map(keyword => `- ${keyword}`).join('\n')}
+${(roleData.analysis.keywords || []).map(keyword => `- ${keyword}`).join('\n')}
 
 ## 产品变现模型
-${Object.entries(roleData.analysis.productModel).map(([tier, details]) => 
-  `### ${tier}\n- 产品: ${details.产品}\n- 价格: ${details.价格}元\n- 转化率: ${details.转化率}\n`
-).join('\n')}
+${roleData.analysis.productModel ? Object.entries(roleData.analysis.productModel).map(([tier, details]) => 
+  `### ${tier}\n- 产品: ${details.产品 || details.product || 'N/A'}\n- 价格: ${details.价格 || details.price || 'N/A'}元\n- 转化率: ${details.转化率 || details.conversion || 'N/A'}\n`
+).join('\n') : '暂无产品模型数据'}
 
 ---
 *报告生成时间: ${new Date().toLocaleString('zh-CN')}*
@@ -482,7 +525,35 @@ ${Object.entries(roleData.analysis.productModel).map(([tier, details]) =>
     for (let i = 0; i < articles.length; i++) {
       const article = articles[i];
       const filename = `article_${String(i + 1).padStart(3, '0')}.md`;
-      await fs.writeFile(path.join(outputPath, 'articles', filename), article.content);
+      const filePath = path.join(outputPath, 'articles', filename);
+      
+      this.logger.info(`💾 开始保存文章 ${i + 1}`, { filename, filePath });
+      
+      try {
+        await fs.writeFile(filePath, article.content);
+        
+        // 验证文件是否真的保存成功
+        const fileExists = await fs.pathExists(filePath);
+        const fileStats = fileExists ? await fs.stat(filePath) : null;
+        
+        if (fileExists && fileStats.size > 0) {
+          console.log(`📄 文章已保存: ${filePath} (${fileStats.size} bytes)`);
+          this.logger.success(`文章 ${i + 1} 保存成功`, { 
+            filePath, 
+            fileSize: fileStats.size,
+            wordCount: article.wordCount 
+          });
+        } else {
+          throw new Error(`文件保存失败或文件为空: ${filePath}`);
+        }
+      } catch (saveError) {
+        this.logger.error(`文章 ${i + 1} 保存失败`, { 
+          filename, 
+          filePath, 
+          error: saveError.message 
+        });
+        console.log(`❌ 文章保存失败: ${filePath} - ${saveError.message}`);
+      }
       
       // 收集所有配图提示词
       allImagePrompts.push(...article.imagePrompts);
@@ -522,8 +593,14 @@ ${Object.entries(roleData.analysis.productModel).map(([tier, details]) =>
 
   // 主流程
   async run(roleDescription) {
-    console.log('🚀 UPCE万能虚拟产品生成系统启动');
-    console.log('=' * 50);
+    const roleId = this.generateRoleId(roleDescription);
+    const outputPath = path.join(this.outputDir, roleId);
+    
+    // 初始化日志系统
+    this.logger = new Logger(outputPath, roleId);
+    
+    this.logger.info('🚀 UPCE万能虚拟产品生成系统启动');
+    this.logger.info('角色描述', { roleDescription });
     
     const startTime = Date.now();
 
@@ -535,20 +612,46 @@ ${Object.entries(roleData.analysis.productModel).map(([tier, details]) =>
       const titles = await this.generateTitles(roleData);
 
       // Step 3: 生成文章
-      console.log('📚 开始生成文章内容...');
+      this.logger.stepStart('文章生成', `生成${Math.min(titles.length, 3)}篇文章`);
       const articles = [];
       
-      for (let i = 0; i < Math.min(titles.length, 10); i++) { // 先生成10篇测试
-        const article = await this.generateArticle(titles[i], roleData, i + 1);
-        articles.push(article);
+      for (let i = 0; i < Math.min(titles.length, 3); i++) { // 先生成3篇测试，避免超时
+        this.logger.progress(`生成文章: ${titles[i].substring(0, 30)}...`, i + 1, 3);
         
-        if ((i + 1) % 5 === 0) {
-          console.log(`✅ 已完成 ${i + 1} 篇文章`);
+        try {
+          this.logger.info(`🚀 开始生成文章 ${i + 1}`, { 
+            title: titles[i], 
+            index: i + 1, 
+            totalArticles: Math.min(titles.length, 3) 
+          });
+          
+          const article = await this.generateArticle(titles[i], roleData, i + 1);
+          articles.push(article);
+          
+          this.logger.success(`文章 ${i + 1} 生成完成`, { 
+            title: titles[i], 
+            wordCount: article.wordCount,
+            imageCount: article.imagePrompts.length,
+            filePath: `${this.outputDir}/${roleId}/articles/article_${String(i + 1).padStart(3, '0')}.md`
+          });
+          
+        } catch (error) {
+          this.logger.error(`文章 ${i + 1} 生成失败`, { 
+            title: titles[i], 
+            error: error.message 
+          });
+          
+          // 使用备用文章
+          const fallbackArticle = this.createFallbackArticle(titles[i], roleData, i + 1);
+          articles.push(fallbackArticle);
+          this.logger.warning(`使用备用文章 ${i + 1}`);
         }
         
         // 避免API限制
         await new Promise(resolve => setTimeout(resolve, 500));
       }
+      
+      this.logger.stepComplete('文章生成', { articlesCount: articles.length });
 
       // Step 4: 保存输出
       const stats = await this.saveOutput(roleData, titles, articles);
@@ -557,28 +660,28 @@ ${Object.entries(roleData.analysis.productModel).map(([tier, details]) =>
       const endTime = Date.now();
       const duration = Math.round((endTime - startTime) / 1000);
 
-      console.log('\n🎉 生成完成！');
-      console.log('=' * 50);
-      console.log(`📊 统计信息:`);
-      console.log(`   - 角色ID: ${stats.roleId}`);
-      console.log(`   - 标题数量: ${stats.statistics.titlesCount}`);
-      console.log(`   - 文章数量: ${stats.statistics.articlesCount}`);
-      console.log(`   - 配图数量: ${stats.statistics.imagesCount}`);
-      console.log(`   - 总字数: ${stats.statistics.totalWords.toLocaleString()}`);
-      console.log(`   - 平均字数: ${stats.statistics.avgWordsPerArticle}`);
-      console.log(`   - 处理时间: ${duration}秒`);
-      console.log(`   - 输出目录: ${stats.outputPath}`);
-      console.log('\n📁 输出文件:');
-      console.log(`   - analysis_report.md (角色分析报告)`);
-      console.log(`   - titles.txt (标题列表)`);
-      console.log(`   - articles/ (文章目录)`);
-      console.log(`   - images/ (配图信息)`);
-      console.log(`   - generation_stats.json (统计数据)`);
+      // 生成最终报告
+      this.logger.generateFinalReport({
+        ...stats,
+        duration: `${duration}秒`,
+        performance: {
+          totalTime: duration,
+          avgTimePerArticle: Math.round(duration / articles.length),
+          apiCalls: articles.length + 2, // 角色分析 + 标题生成 + 文章数量
+        }
+      });
+
+      // 显示输出路径
+      this.logger.showOutputPaths();
+
+      console.log('\n🎉 生成完成！详细信息请查看日志文件');
+      console.log(`📄 HTML报告: open "${path.join(outputPath, 'generation_report.html')}"`);
+      console.log(`📁 输出目录: open "${outputPath}"`);
 
       return stats;
 
     } catch (error) {
-      console.error('❌ 生成过程出错:', error);
+      this.logger.error('生成过程出错', { error: error.message, stack: error.stack });
       throw error;
     }
   }

@@ -1,0 +1,6 @@
+{
+  "status": "partial_success",
+  "error": "chalk.cyan is not a function",
+  "generatedAt": "2026-02-01T17:09:07.964Z",
+  "fallback": true
+}
