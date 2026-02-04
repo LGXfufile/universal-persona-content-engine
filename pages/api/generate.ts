@@ -210,17 +210,45 @@ async function parseUPCEOutput(outputBuffer: string, projectRoot: string): Promi
   const fs = require('fs').promises;
   
   try {
-    // 从输出中提取角色ID和输出路径
-    const roleIdMatch = outputBuffer.match(/角色ID[：:]\s*([a-zA-Z0-9_]+)/);
-    const pathMatch = outputBuffer.match(/输出路径[：:]\s*([^\n\r]+)/);
+    // 从输出中提取角色ID和输出路径 - 修复正则表达式
+    const roleIdMatch = outputBuffer.match(/角色ID[：:\s]*([a-zA-Z0-9_]+)/);
+    const pathMatch = outputBuffer.match(/输出目录[：:\s]*([^\n\r]+)/);
     
-    if (!roleIdMatch || !pathMatch) {
-      throw new Error('无法从UPCE输出中提取必要信息');
+    // 如果无法从输出中提取，尝试从最新的输出目录获取
+    let roleId = '';
+    let outputPath = '';
+    
+    if (roleIdMatch && pathMatch) {
+      roleId = roleIdMatch[1];
+      outputPath = pathMatch[1].trim();
+    } else {
+      // 尝试从upce_output目录找到最新的role目录
+      const upceOutputDir = path.join(projectRoot, 'upce_output');
+      try {
+        const dirs = await fs.readdir(upceOutputDir);
+        const roleDirs = dirs.filter((dir: string) => dir.startsWith('role_'));
+        if (roleDirs.length > 0) {
+          // 按修改时间排序，获取最新的
+          const stats = await Promise.all(
+            roleDirs.map(async (dir: string) => {
+              const stat = await fs.stat(path.join(upceOutputDir, dir));
+              return { dir, mtime: stat.mtime };
+            })
+          );
+          stats.sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
+          roleId = stats[0].dir;
+          outputPath = path.join('upce_output', roleId);
+        }
+      } catch (e) {
+        console.warn('无法读取upce_output目录:', e);
+      }
     }
     
-    const roleId = roleIdMatch[1];
-    const outputPath = pathMatch[1].trim();
-    const fullOutputPath = path.join(projectRoot, outputPath);
+    if (!roleId) {
+      throw new Error('无法确定角色ID和输出路径');
+    }
+    
+    const fullOutputPath = path.isAbsolute(outputPath) ? outputPath : path.join(projectRoot, outputPath);
     
     // 读取分析报告
     let analysis: RoleAnalysis = {
@@ -251,6 +279,7 @@ async function parseUPCEOutput(outputBuffer: string, projectRoot: string): Promi
         solutions: []
       }
     };
+    
     try {
       const analysisPath = path.join(fullOutputPath, 'analysis_report.md');
       const analysisContent = await fs.readFile(analysisPath, 'utf-8');
@@ -319,7 +348,7 @@ async function parseUPCEOutput(outputBuffer: string, projectRoot: string): Promi
       titles,
       articles,
       images,
-      outputPath
+      outputPath: outputPath.replace(projectRoot, '').replace(/^\//, '')
     };
     
   } catch (error) {
