@@ -1,5 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { ContentGenerationRequest, ContentGenerationResponse, GenerationProgress, APIResponse } from '@/types';
+import { ContentGenerationRequest, ContentGenerationResponse, GenerationProgress, APIResponse, RoleAnalysis } from '@/types';
+import path from 'path';
+import { spawn } from 'child_process';
 
 // 存储生成进度的内存缓存
 const progressCache = new Map<string, GenerationProgress>();
@@ -71,89 +73,103 @@ async function generateContentStream(
   onError: (error: string) => void
 ) {
   try {
-    // 暂时使用模拟数据，后续集成真实的UPCE引擎
-    const mockEngine = {
-      run: async (roleDescription: string) => {
-        // 模拟处理时间
-        await new Promise(resolve => setTimeout(resolve, 2000));
+    // 集成真实的UPCE引擎
+    const projectRoot = process.cwd();
+    const upceScript = path.join(projectRoot, 'upce-quick.js');
+    
+    // 生成任务ID
+    const taskId = generateTaskId(roleDescription);
+    
+    return new Promise((resolve, reject) => {
+      // 启动UPCE进程
+      const upceProcess = spawn('node', [upceScript, roleDescription], {
+        cwd: projectRoot,
+        stdio: ['pipe', 'pipe', 'pipe'],
+        env: {
+          ...process.env,
+          DEEPSEEK_API_KEY: 'sk-71cc3aad8fad44c8970dd549933d3573'
+        }
+      });
+
+      let outputBuffer = '';
+      let errorBuffer = '';
+      let currentStep = '';
+      let progress = 0;
+
+      // 监听标准输出
+      upceProcess.stdout?.on('data', (data) => {
+        const output = data.toString();
+        outputBuffer += output;
         
-        return {
-          roleId: `role_${Date.now()}`,
-          analysis: {
-            demographics: { 
-              age: '25-35', 
-              gender: '女性', 
-              location: '一线城市',
-              income: '中高收入',
-              education: '本科以上'
-            },
-            psychographics: { 
-              values: ['健康', '品质'], 
-              interests: ['美食', '旅行'],
-              lifestyle: ['快节奏', '注重效率'],
-              personality: ['理性', '追求完美']
-            },
-            painPoints: ['时间不够', '选择困难'],
-            goals: ['提升生活品质', '保持健康'],
-            contentPreferences: { 
-              platforms: ['小红书', '微信'], 
-              formats: ['图文', '视频'],
-              tone: '亲切专业',
-              topics: ['生活方式', '健康养生']
-            },
-            marketingInsights: { 
-              triggers: ['限时优惠'], 
-              objections: ['价格敏感'],
-              solutions: ['性价比展示', '用户评价']
-            }
-          },
-          titles: Array.from({ length: 10 }, (_, i) => `精选标题 ${i + 1}`),
-          articles: Array.from({ length: 3 }, (_, i) => ({
-            id: `article_${i}`,
-            title: `精选文章 ${i + 1}`,
-            content: '这是一篇由AI生成的高质量营销文章内容...',
-            platform: ['xiaohongshu', 'weixin', 'douyin'][i] as any,
-            tags: ['营销', '内容'],
-            imagePrompts: [`配图提示词 ${i + 1}`]
-          })),
-          images: Array.from({ length: 4 }, (_, i) => ({
-            id: `img_${i}`,
-            prompt: `配图提示词 ${i + 1}`,
-            status: 'completed' as any
-          })),
-          outputPath: `/upce_output/mock_${Date.now()}/`
-        };
-      }
-    };
-    
-    // 模拟进度更新
-    const steps = [
-      { step: '角色深度分析', progress: 20, message: '正在分析用户画像...' },
-      { step: '生成内容标题', progress: 40, message: '正在生成标题库...' },
-      { step: '创建文章内容', progress: 60, message: '正在创作文章内容...' },
-      { step: '生成配图', progress: 80, message: '正在生成配图...' },
-      { step: '保存输出文件', progress: 100, message: '正在保存文件...' }
-    ];
+        // 解析进度信息
+        const lines = output.split('\n');
+        for (const line of lines) {
+          if (line.includes('开始分析角色')) {
+            currentStep = '角色深度分析';
+            progress = 10;
+            onProgress({ step: currentStep, progress, message: '正在深度分析用户画像特征...' });
+          } else if (line.includes('开始生成标题')) {
+            currentStep = '生成内容标题';
+            progress = 30;
+            onProgress({ step: currentStep, progress, message: '正在生成高质量标题库...' });
+          } else if (line.includes('开始生成文章')) {
+            currentStep = '创建文章内容';
+            progress = 60;
+            onProgress({ step: currentStep, progress, message: '正在创作个性化文章内容...' });
+          } else if (line.includes('开始生成图片')) {
+            currentStep = '生成配图';
+            progress = 80;
+            onProgress({ step: currentStep, progress, message: '正在生成精美配图...' });
+          } else if (line.includes('导出完成')) {
+            currentStep = '保存输出文件';
+            progress = 100;
+            onProgress({ step: currentStep, progress, message: '正在保存完整输出文件...' });
+          }
+        }
+      });
 
-    for (const step of steps) {
-      onProgress(step);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
+      // 监听标准错误
+      upceProcess.stderr?.on('data', (data) => {
+        errorBuffer += data.toString();
+      });
 
-    // 执行内容生成
-    const result = await mockEngine.run(roleDescription);
-    
-    // 转换结果格式
-    const response: ContentGenerationResponse = {
-      roleId: result.roleId,
-      analysis: result.analysis,
-      titles: result.titles || [],
-      articles: result.articles || [],
-      images: result.images || [],
-      outputPath: result.outputPath,
-    };
+      // 进程结束处理
+      upceProcess.on('close', async (code) => {
+        if (code === 0) {
+          try {
+            // 解析UPCE输出结果
+            const result = await parseUPCEOutput(outputBuffer, projectRoot);
+            onComplete(result);
+            resolve(result);
+          } catch (parseError) {
+            const error = `解析UPCE输出失败: ${parseError instanceof Error ? parseError.message : '未知错误'}`;
+            onError(error);
+            reject(new Error(error));
+          }
+        } else {
+          const error = `UPCE进程异常退出 (代码: ${code}): ${errorBuffer}`;
+          onError(error);
+          reject(new Error(error));
+        }
+      });
 
-    onComplete(response);
+      // 进程错误处理
+      upceProcess.on('error', (error) => {
+        const errorMsg = `启动UPCE进程失败: ${error.message}`;
+        onError(errorMsg);
+        reject(new Error(errorMsg));
+      });
+
+      // 设置超时
+      setTimeout(() => {
+        if (!upceProcess.killed) {
+          upceProcess.kill();
+          const timeoutError = 'UPCE生成超时，请稍后重试';
+          onError(timeoutError);
+          reject(new Error(timeoutError));
+        }
+      }, 300000); // 5分钟超时
+    });
 
   } catch (error) {
     console.error('Generation stream error:', error);
@@ -187,4 +203,199 @@ export async function getProgress(taskId: string) {
 // 获取任务结果的API端点
 export async function getResult(taskId: string) {
   return resultCache.get(taskId);
+}
+
+// 解析UPCE输出结果
+async function parseUPCEOutput(outputBuffer: string, projectRoot: string): Promise<ContentGenerationResponse> {
+  const fs = require('fs').promises;
+  
+  try {
+    // 从输出中提取角色ID和输出路径
+    const roleIdMatch = outputBuffer.match(/角色ID[：:]\s*([a-zA-Z0-9_]+)/);
+    const pathMatch = outputBuffer.match(/输出路径[：:]\s*([^\n\r]+)/);
+    
+    if (!roleIdMatch || !pathMatch) {
+      throw new Error('无法从UPCE输出中提取必要信息');
+    }
+    
+    const roleId = roleIdMatch[1];
+    const outputPath = pathMatch[1].trim();
+    const fullOutputPath = path.join(projectRoot, outputPath);
+    
+    // 读取分析报告
+    let analysis: RoleAnalysis = {
+      demographics: {
+        age: '',
+        gender: '',
+        location: '',
+        income: '',
+        education: ''
+      },
+      psychographics: {
+        values: [],
+        interests: [],
+        lifestyle: [],
+        personality: []
+      },
+      painPoints: [],
+      goals: [],
+      contentPreferences: {
+        platforms: [],
+        formats: [],
+        tone: '',
+        topics: []
+      },
+      marketingInsights: {
+        triggers: [],
+        objections: [],
+        solutions: []
+      }
+    };
+    try {
+      const analysisPath = path.join(fullOutputPath, 'analysis_report.md');
+      const analysisContent = await fs.readFile(analysisPath, 'utf-8');
+      analysis = { ...analysis, ...parseAnalysisReport(analysisContent) };
+    } catch (e) {
+      console.warn('无法读取分析报告:', e);
+    }
+    
+    // 读取标题列表
+    let titles: string[] = [];
+    try {
+      const titlesPath = path.join(fullOutputPath, 'titles.txt');
+      const titlesContent = await fs.readFile(titlesPath, 'utf-8');
+      titles = titlesContent.split('\n').filter((line: string) => line.trim()).slice(0, 100);
+    } catch (e) {
+      console.warn('无法读取标题文件:', e);
+    }
+    
+    // 读取文章列表
+    let articles: any[] = [];
+    try {
+      const articlesDir = path.join(fullOutputPath, 'articles');
+      const articleFiles = await fs.readdir(articlesDir);
+      
+      for (const file of articleFiles.filter((f: string) => f.endsWith('.md'))) {
+        const articlePath = path.join(articlesDir, file);
+        const content = await fs.readFile(articlePath, 'utf-8');
+        const title = content.split('\n')[0].replace(/^#\s*/, '');
+        
+        articles.push({
+          id: file.replace('.md', ''),
+          title: title || file,
+          content: content,
+          platform: 'xiaohongshu',
+          tags: ['AI生成', '营销内容'],
+          imagePrompts: []
+        });
+      }
+    } catch (e) {
+      console.warn('无法读取文章文件:', e);
+    }
+    
+    // 读取图片信息
+    let images: any[] = [];
+    try {
+      const imagesDir = path.join(fullOutputPath, 'images');
+      const imageFiles = await fs.readdir(imagesDir);
+      
+      for (const file of imageFiles.filter((f: string) => f.endsWith('.info.json'))) {
+        const imagePath = path.join(imagesDir, file);
+        const imageInfo = JSON.parse(await fs.readFile(imagePath, 'utf-8'));
+        
+        images.push({
+          id: file.replace('.info.json', ''),
+          prompt: imageInfo.prompt || '配图',
+          status: 'completed'
+        });
+      }
+    } catch (e) {
+      console.warn('无法读取图片信息:', e);
+    }
+    
+    return {
+      roleId,
+      analysis,
+      titles,
+      articles,
+      images,
+      outputPath
+    };
+    
+  } catch (error) {
+    throw new Error(`解析UPCE输出失败: ${error instanceof Error ? error.message : '未知错误'}`);
+  }
+}
+
+// 解析分析报告内容
+function parseAnalysisReport(content: string): any {
+  try {
+    // 简单的Markdown解析，提取关键信息
+    const sections = content.split('##').slice(1);
+    const analysis: any = {
+      demographics: {},
+      psychographics: {},
+      painPoints: [],
+      goals: [],
+      contentPreferences: {},
+      marketingInsights: {}
+    };
+    
+    for (const section of sections) {
+      const lines = section.trim().split('\n');
+      const title = lines[0].trim();
+      const sectionContent = lines.slice(1).join('\n');
+      
+      if (title.includes('人口统计')) {
+        analysis.demographics = extractKeyValuePairs(sectionContent);
+      } else if (title.includes('心理特征')) {
+        analysis.psychographics = extractKeyValuePairs(sectionContent);
+      } else if (title.includes('痛点')) {
+        analysis.painPoints = extractListItems(sectionContent);
+      } else if (title.includes('目标')) {
+        analysis.goals = extractListItems(sectionContent);
+      } else if (title.includes('内容偏好')) {
+        analysis.contentPreferences = extractKeyValuePairs(sectionContent);
+      } else if (title.includes('营销洞察')) {
+        analysis.marketingInsights = extractKeyValuePairs(sectionContent);
+      }
+    }
+    
+    return analysis;
+  } catch (error) {
+    console.warn('解析分析报告失败:', error);
+    return {};
+  }
+}
+
+// 提取键值对
+function extractKeyValuePairs(content: string): any {
+  const result: any = {};
+  const lines = content.split('\n');
+  
+  for (const line of lines) {
+    const match = line.match(/[-*]\s*([^：:]+)[：:]\s*(.+)/);
+    if (match) {
+      const key = match[1].trim();
+      const value = match[2].trim();
+      result[key] = value;
+    }
+  }
+  
+  return result;
+}
+
+// 提取列表项
+function extractListItems(content: string): string[] {
+  const lines = content.split('\n');
+  const items: string[] = [];
+  
+  for (const line of lines) {
+    const match = line.match(/[-*]\s*(.+)/);
+    if (match) {
+      items.push(match[1].trim());
+    }
+  }
+  
+  return items;
 }
