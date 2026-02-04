@@ -186,10 +186,19 @@ export default function Home() {
                 value={roleInput}
                 onChange={(e) => setRoleInput(e.target.value)}
                 placeholder="请详细描述您的目标用户群体，例如：25-35岁一线城市白领女性，关注健康生活方式，有一定消费能力..."
-                className="w-full h-32 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                className="w-full h-40 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 leading-relaxed"
                 disabled={isProcessing}
                 whileFocus={{ scale: 1.01 }}
+                maxLength={1000}
               />
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  💡 提示：描述越详细，生成的内容越精准
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {roleInput.length}/1000
+                </span>
+              </div>
             </div>
 
             <motion.button
@@ -293,24 +302,33 @@ export default function Home() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                <motion.div 
+                  className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800"
+                  whileHover={{ scale: 1.02 }}
+                >
                   <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {result.titles?.length || 0}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">标题生成</div>
-                </div>
-                <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">精选标题</div>
+                </motion.div>
+                <motion.div 
+                  className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-800"
+                  whileHover={{ scale: 1.02 }}
+                >
                   <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                     {result.articles?.length || 0}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">文章创作</div>
-                </div>
-                <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">原创文章</div>
+                </motion.div>
+                <motion.div 
+                  className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800"
+                  whileHover={{ scale: 1.02 }}
+                >
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {result.images?.length || 0}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">配图生成</div>
-                </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">AI配图</div>
+                </motion.div>
               </div>
 
               <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">

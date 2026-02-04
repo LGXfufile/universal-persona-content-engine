@@ -1,54 +1,156 @@
-# UPCE - 万能虚拟产品生成系统
+# UPCE - 通用虚拟产品内容生成引擎
 
-## 🎯 项目简介
+<div align="center">
 
-Universal Persona-Driven Content Engine (UPCE) 是一个基于AI的通用虚拟产品内容生成系统，能够根据任意用户角色描述，自动生成爆文标题、完整文章内容和精美配图方案，帮助内容创作者快速构建完整的营销内容体系。
+![UPCE Logo](https://img.shields.io/badge/UPCE-AI%20Content%20Engine-blue?style=for-the-badge&logo=openai)
 
-## ✨ 核心功能
+[![Next.js](https://img.shields.io/badge/Next.js-15.5.11-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4.0-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
+[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?style=flat-square&logo=vercel)](https://vercel.com/)
 
-- 🧠 **智能角色分析** - 深度解析目标人群的情绪、需求和痛点
-- 📝 **批量内容生成** - 自动生成高质量的原创文章内容
-- 🎨 **配图方案设计** - 提供详细的AI配图生成提示词
-- 🔍 **智能去重检测** - 确保每篇内容的独特性
-- 📊 **多平台适配** - 针对不同平台优化内容格式
-- 💰 **变现模型设计** - 自动设计四层产品变现体系
+**基于AI的智能内容创作平台，为您的营销需求提供精准的个性化内容解决方案**
+
+[🚀 在线体验](https://universal-persona-content-engine.vercel.app/) | [📖 使用文档](#使用指南) | [🛠️ 本地部署](#本地开发)
+
+</div>
+
+## ✨ 核心特性
+
+### 🎯 智能用户画像分析
+- **深度AI分析**：基于DeepSeek大模型的用户画像深度解析
+- **多维度洞察**：人口统计、心理特征、痛点分析、目标识别
+- **营销策略**：自动生成营销触发点和解决方案
+
+### 📝 批量内容生成
+- **标题库生成**：一次生成100+高质量营销标题
+- **原创文章**：AI创作个性化长文内容
+- **多平台适配**：小红书、微信、抖音等平台专属格式
+
+### 🎨 AI配图生成
+- **智能配图**：基于阿里云通义千问的图像生成
+- **场景匹配**：根据内容自动生成匹配的视觉元素
+- **高质量输出**：1664×928分辨率，适合社交媒体
+
+### 🌐 现代化Web界面
+- **苹果风格设计**：参考Apple官网的简约美学
+- **响应式布局**：完美适配桌面端和移动端
+- **深色模式**：护眼的深色主题支持
+- **实时进度**：生成过程可视化跟踪
+
+## 🏗️ 技术架构
+
+### 前端技术栈
+```
+Next.js 15.5.11     # React全栈框架
+TypeScript 5.9.3    # 类型安全
+Tailwind CSS 3.4.0  # 原子化CSS
+Framer Motion       # 动画库
+```
+
+### 后端引擎
+```
+Node.js            # 运行环境
+DeepSeek API       # 文本生成AI
+阿里云DashScope     # 图像生成AI
+```
+
+### 部署平台
+```
+Vercel             # 前端部署
+GitHub Actions     # CI/CD自动化
+```
 
 ## 🚀 快速开始
 
-### 环境要求
-- Node.js 18+ 
+### 在线使用
+访问 [https://universal-persona-content-engine.vercel.app/](https://universal-persona-content-engine.vercel.app/)
+
+1. 输入详细的用户画像描述
+2. 点击"开始生成内容"
+3. 等待AI分析和内容创作
+4. 下载完整的内容包
+
+### 本地开发
+
+#### 环境要求
+- Node.js 18.0+
 - npm 或 yarn
 
-### 安装依赖
+#### 安装步骤
 ```bash
-# 克隆项目（如果从GitHub获取）
+# 克隆项目
 git clone https://github.com/LGXfufile/universal-persona-content-engine.git
 cd universal-persona-content-engine
 
 # 安装依赖
 npm install
+
+# 启动开发服务器
+npm run dev
+
+# 访问 http://localhost:3000
 ```
 
-### 🧪 图片生成测试（推荐）
-在使用完整版本前，建议先测试图片生成API是否配置正确：
-
-```bash
-# 一键测试图片生成API
-./test-images.sh
-
-# 或直接运行测试
-node test-image-api.js --quick
+#### 环境配置
+创建 `.env.local` 文件：
+```env
+DEEPSEEK_API_KEY=your_deepseek_api_key
+DASHSCOPE_API_KEY=your_aliyun_api_key
 ```
 
-**测试结果指导：**
-- ✅ **API测试成功** → 使用完整版本：`node upce.js "角色描述"`
-- ❌ **API测试失败** → 使用演示版本：`node upce-demo.js "角色描述"`
+## 📖 使用指南
 
-详细测试指南请查看：[IMAGE_TEST_GUIDE.md](IMAGE_TEST_GUIDE.md)
+### 1. 用户画像描述
+为获得最佳效果，请提供详细的用户画像信息：
 
-### 基础使用
+**推荐格式：**
+```
+年龄段 + 地域 + 职业 + 收入水平 + 兴趣爱好 + 消费习惯 + 痛点需求
 
-#### 1. 演示版本（推荐新手）
+示例：
+25-35岁一线城市白领女性，月收入1-3万，关注健康生活方式，
+喜欢高品质产品，时间紧张，追求效率，对价格不太敏感，
+经常在小红书和微信获取信息。
+```
+
+### 2. 生成内容类型
+
+#### 📋 标题库 (100条)
+- 吸引眼球的营销标题
+- 多种文案风格
+- 平台优化适配
+
+#### 📄 原创文章 (3篇)
+- 深度内容创作
+- 个性化定制
+- 多平台格式
+
+#### 🖼️ AI配图 (12张)
+- 文章配套图片
+- 场景化设计
+- 高清质量输出
+
+### 3. 输出文件结构
+```
+upce_output/role_xxxxxxxx/
+├── README.md                 # 使用说明
+├── analysis_report.md        # 用户画像分析报告
+├── titles.txt               # 标题库
+├── articles/                # 文章目录
+│   ├── article_001.md
+│   ├── article_002.md
+│   └── article_003.md
+├── images/                  # 图片目录
+└── publish_ready/           # 平台适配内容
+    ├── xiaohongshu/        # 小红书格式
+    ├── weixin/             # 微信格式
+    └── douyin/             # 抖音格式
+```
+
+## 🛠️ CLI工具使用
+
+### 演示版本（推荐新手）
 演示版本不依赖外部API，可以立即体验完整功能：
 
 ```bash
@@ -65,7 +167,7 @@ node upce-demo.js "35岁宝妈，想通过小红书做副业赚钱"
 node upce-demo.js "25岁程序员，想做技术自媒体建立个人品牌"
 ```
 
-#### 2. 快速测试版本
+### 快速测试版本
 集成真实AI API，生成更丰富的内容：
 
 ```bash
@@ -73,7 +175,7 @@ node upce-demo.js "25岁程序员，想做技术自媒体建立个人品牌"
 node upce-quick.js "角色描述"
 ```
 
-#### 3. 完整版本
+### 完整版本
 包含配图生成和完整导出功能：
 
 ```bash
@@ -81,149 +183,157 @@ node upce-quick.js "角色描述"
 node upce.js "角色描述"
 ```
 
-### 输出结果
+## 🔧 开发指南
 
-运行成功后，系统会在 `upce_output/` 目录下生成完整的内容包：
-
+### 项目结构
 ```
-upce_output/role_xxxxxxxx/
-├── README.md                   # 使用说明
-├── analysis_report.md          # 角色深度分析报告
-├── complete_report.md          # 完整项目报告
-├── titles.txt                  # 爆文标题列表
-├── generation_stats.json      # 统计数据
-├── image_prompts.json         # 配图提示词
-├── articles/                   # 原创文章目录
-│   ├── article_001.md
-│   ├── article_002.md
-│   └── article_003.md
-├── images/                     # 配图信息
-│   └── *.info.json
-└── publish_ready/              # 发布就绪版本
-    ├── xiaohongshu/           # 小红书优化版
-    ├── weixin/                # 微信公众号版
-    └── douyin/                # 抖音脚本版
+├── pages/                   # Next.js页面
+│   ├── api/                # API路由
+│   │   └── generate.ts     # 内容生成API
+│   └── index.tsx           # 主页面
+├── src/
+│   ├── types/              # TypeScript类型定义
+│   └── utils/              # 工具函数
+├── styles/                 # 样式文件
+├── public/                 # 静态资源
+├── upce-quick.js           # UPCE核心引擎
+├── prompts.js              # AI提示词模板
+└── vercel.json             # Vercel部署配置
 ```
 
-## 📋 使用示例
+### 核心API
 
-### 示例1：健身教练转型线上
-```bash
-node upce-demo.js "三线城市32岁健身教练，月入6000，想做线上私教"
+#### POST /api/generate
+内容生成API，支持Server-Sent Events实时进度推送。
+
+**请求参数：**
+```typescript
+{
+  roleDescription: string;    // 用户画像描述
+  titleCount?: number;        // 标题数量 (默认100)
+  articleCount?: number;      // 文章数量 (默认3)
+  imageCount?: number;        // 图片数量 (默认4)
+}
 ```
 
-**生成内容预览：**
-- 标题：《月入6000的健身教练，如何靠线上私教3个月收入翻倍》
-- 文章：1300+字的完整转型攻略
-- 配图：4张专业场景配图方案
-- 变现：99元-9800元四层产品模型
+**响应格式：**
+```typescript
+// 进度更新
+{
+  type: 'progress',
+  data: {
+    step: string;           // 当前步骤
+    progress: number;       // 进度百分比
+    message: string;        // 状态消息
+  }
+}
 
-### 示例2：宝妈副业创业
-```bash
-node upce-demo.js "35岁宝妈，有两个孩子，想通过小红书做副业"
-```
-
-**生成内容预览：**
-- 标题：《35岁二胎妈妈，小红书副业月入过万的真实经历》
-- 文章：贴近宝妈群体的实用指南
-- 配图：居家场景的真实生活配图
-- 变现：适合宝妈的低门槛产品设计
-
-### 示例3：程序员个人品牌
-```bash
-node upce-demo.js "25岁前端程序员，想做技术自媒体建立个人品牌"
-```
-
-**生成内容预览：**
-- 标题：《25岁程序员，技术自媒体年入50万的完整路径》
-- 文章：技术人员转型内容创作指南
-- 配图：编程工作场景和成长历程
-- 变现：技术课程和咨询服务模型
-
-## ⚙️ 高级配置
-
-### API配置（可选）
-
-如果要使用真实AI生成功能，需要配置API密钥：
-
-#### 1. DeepSeek API配置
-```bash
-# 方法1：环境变量
-export DEEPSEEK_API_KEY="sk-613c035207a848529bfae4308cce4515"
-
-# 方法2：直接修改脚本中的apiKey变量
-```
-
-#### 2. 阿里云通义万相配置
-```bash
-# 配置阿里云API密钥
-export DASHSCOPE_API_KEY="sk-45097a3d1b244a2dab5ae991d50d7daf"
+// 完成结果
+{
+  type: 'complete',
+  data: {
+    roleId: string;         // 角色ID
+    analysis: RoleAnalysis; // 分析结果
+    titles: string[];       // 标题列表
+    articles: Article[];    // 文章列表
+    images: ImageMetadata[]; // 图片信息
+    outputPath: string;     // 输出路径
+  }
+}
 ```
 
 ### 自定义配置
 
-可以修改脚本中的配置参数：
+#### 修改AI提示词
+编辑 `prompts.js` 文件中的提示词模板：
+```javascript
+// 角色分析提示词
+roleAnalysis: (roleDescription) => `
+  请深度分析以下用户画像：${roleDescription}
+  // ... 自定义提示词
+`
+```
 
+#### 调整生成参数
+在 `upce-quick.js` 中修改配置：
 ```javascript
 this.config = {
-  titleCount: 10,        // 标题数量
-  articleCount: 3,       // 文章数量  
-  maxRetries: 2,         // 重试次数
-  imageCount: 4          // 每篇文章配图数量
+  titleCount: 100,        // 标题数量
+  articleCount: 3,        // 文章数量
+  maxRetries: 3,          // 重试次数
+  imageCount: 4           // 图片数量
 };
+```
+
+## 🚀 部署指南
+
+### Vercel部署 (推荐)
+1. Fork本项目到您的GitHub
+2. 在Vercel中导入项目
+3. 配置环境变量
+4. 自动部署完成
+
+### 手动部署
+```bash
+# 构建项目
+npm run build
+
+# 启动生产服务器
+npm start
+```
+
+### 静态导出
+```bash
+# 生成静态文件
+npm run export
+
+# 输出到 /out 目录
+```
+
+## 🔧 配置说明
+
+### API密钥配置
+- **DeepSeek API**: 用于文本生成，在 [DeepSeek官网](https://platform.deepseek.com/) 获取
+- **阿里云DashScope**: 用于图像生成，在 [阿里云控制台](https://dashscope.console.aliyun.com/) 获取
+
+### 环境变量
+```env
+# 必需配置
+DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxx
+DASHSCOPE_API_KEY=sk-xxxxxxxxxxxxxxxx
+
+# 可选配置
+EXPORT_MODE=static                    # 静态导出模式
+NODE_ENV=production                   # 生产环境
 ```
 
 ## 📊 功能对比
 
-| 功能 | 演示版 | 快速版 | 完整版 |
-|------|--------|--------|--------|
-| 角色分析 | ✅ 模板 | ✅ AI生成 | ✅ AI生成 |
-| 标题生成 | ✅ 10个 | ✅ 10个 | ✅ 100个 |
-| 文章创作 | ✅ 3篇 | ✅ 3篇 | ✅ 100篇 |
-| 配图方案 | ✅ 提示词 | ✅ 提示词 | ✅ 真实生成 |
-| 多平台适配 | ✅ | ✅ | ✅ |
-| 文件导出 | ✅ 完整 | ✅ 完整 | ✅ 完整 |
-| API依赖 | ❌ 无需 | ✅ DeepSeek | ✅ 全部 |
-| 运行速度 | ⚡ 极快 | 🚀 较快 | 🐌 较慢 |
+| 功能 | Web界面 | 演示版CLI | 快速版CLI | 完整版CLI |
+|------|---------|-----------|-----------|-----------|
+| 角色分析 | ✅ AI生成 | ✅ 模板 | ✅ AI生成 | ✅ AI生成 |
+| 标题生成 | ✅ 100个 | ✅ 10个 | ✅ 10个 | ✅ 100个 |
+| 文章创作 | ✅ 3篇 | ✅ 3篇 | ✅ 3篇 | ✅ 100篇 |
+| 配图方案 | ✅ 提示词 | ✅ 提示词 | ✅ 提示词 | ✅ 真实生成 |
+| 多平台适配 | ✅ | ✅ | ✅ | ✅ |
+| 实时进度 | ✅ | ❌ | ❌ | ❌ |
+| 文件导出 | ✅ JSON | ✅ 完整 | ✅ 完整 | ✅ 完整 |
+| API依赖 | ✅ DeepSeek | ❌ 无需 | ✅ DeepSeek | ✅ 全部 |
+| 运行速度 | 🚀 较快 | ⚡ 极快 | 🚀 较快 | 🐌 较慢 |
 
-## 🎨 配图生成指南
+## 📈 性能优化
 
-系统会生成详细的配图提示词，可以使用以下AI工具生成图片：
+### 前端优化
+- **代码分割**：动态导入减少初始包大小
+- **图片优化**：WebP格式和懒加载
+- **缓存策略**：静态资源长期缓存
+- **压缩优化**：Gzip和Brotli压缩
 
-### 推荐工具
-1. **阿里云通义万相** - 中文理解好，适合生活场景
-2. **Midjourney** - 画质精美，风格多样  
-3. **Stable Diffusion** - 开源免费，可本地部署
-4. **文心一格** - 百度出品，中文优化
-
-### 使用步骤
-```bash
-# 1. 查看生成的配图提示词
-cat upce_output/role_xxxxxxxx/image_prompts.json
-
-# 2. 复制提示词到AI绘图工具
-# 3. 设置参数：1920x1080，纪实风格
-# 4. 生成后保存到images/目录
-# 5. 更新文章中的图片链接
-```
-
-## 🚀 发布策略
-
-### 平台选择
-- **小红书**: 使用 `publish_ready/xiaohongshu/` 版本
-- **微信公众号**: 使用 `publish_ready/weixin/` 版本
-- **抖音**: 参考 `publish_ready/douyin/` 脚本制作视频
-- **知乎**: 使用原始文章，增加专业数据
-
-### 发布时间
-- **工作日**: 晚上7-9点效果最佳
-- **周末**: 上午10-12点，下午2-4点
-- **频率**: 每天1-2篇，避免刷屏
-
-### 变现时机
-- **1-3个月**: 积累粉丝，建立信任
-- **3-6个月**: 推出低价产品测试市场
-- **6-12个月**: 推出高价值服务
+### 后端优化
+- **API缓存**：重复请求结果缓存
+- **进程管理**：子进程隔离和超时控制
+- **错误重试**：指数退避重试机制
+- **内存管理**：及时清理临时文件
 
 ## 🔧 故障排除
 
@@ -255,90 +365,42 @@ node upce-demo.js "角色描述"
 chmod +x upce-demo.js upce-quick.js upce.js
 ```
 
-### 性能优化
+## 🤝 贡献指南
 
-#### 1. 加速生成
-```bash
-# 使用演示版本，速度最快
-node upce-demo.js "角色描述"
+欢迎提交Issue和Pull Request！
 
-# 减少生成数量（修改脚本配置）
-titleCount: 5,     # 减少标题数量
-articleCount: 1,   # 减少文章数量
-```
+### 开发流程
+1. Fork项目
+2. 创建功能分支
+3. 提交代码
+4. 创建Pull Request
 
-#### 2. 批量处理
-```bash
-# 创建批量脚本
-#!/bin/bash
-roles=(
-  "健身教练想做线上私教"
-  "宝妈想做小红书副业"  
-  "程序员想做技术自媒体"
-)
-
-for role in "${roles[@]}"; do
-  node upce-demo.js "$role"
-done
-```
-
-## 📈 预期效果
-
-按照系统生成的内容和策略执行，预期可达成：
-
-### 短期目标（1-3个月）
-- 📱 获得1000+精准粉丝
-- 📝 发布30+优质内容
-- 💡 建立专业形象和信任
-
-### 中期目标（3-6个月）  
-- 👥 粉丝增长到5000+
-- 💰 月收入达到5000-10000元
-- 🎯 推出付费产品并获得验证
-
-### 长期目标（6-12个月）
-- 🚀 成为细分领域KOL
-- 💎 月收入达到2-5万元
-- 🏆 建立完整的商业闭环
-
-## 🤝 技术支持
-
-### 获取帮助
-- 📖 查看生成的 `README.md` 文件
-- 📊 阅读 `complete_report.md` 完整报告
-- 💬 GitHub Issues: [提交问题](https://github.com/LGXfufile/universal-persona-content-engine/issues)
-
-### 功能定制
-如需要以下服务：
-- 🎨 配图生成服务
-- ✍️ 内容定制优化
-- 📈 发布策略指导  
-- 💰 变现方案设计
-
-请联系技术支持团队。
+### 代码规范
+- 使用TypeScript
+- 遵循ESLint规则
+- 添加适当的注释
+- 编写测试用例
 
 ## 📄 许可证
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
+本项目采用 [MIT License](LICENSE) 开源协议。
 
-## 🌟 贡献指南
+## 🙏 致谢
 
-1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建 Pull Request
-
-## 📞 联系方式
-
-- **GitHub**: [@LGXfufile](https://github.com/LGXfufile)
-- **项目地址**: [universal-persona-content-engine](https://github.com/LGXfufile/universal-persona-content-engine)
+- [Next.js](https://nextjs.org/) - React全栈框架
+- [Tailwind CSS](https://tailwindcss.com/) - CSS框架
+- [Framer Motion](https://www.framer.com/motion/) - 动画库
+- [DeepSeek](https://www.deepseek.com/) - AI文本生成
+- [阿里云通义千问](https://tongyi.aliyun.com/) - AI图像生成
 
 ---
 
-⭐ **如果这个项目对你有帮助，请给个星标支持！**
+<div align="center">
 
-🚀 **立即开始你的内容创业之旅：**
-```bash
-node upce-demo.js "你的角色描述"
-```
+**🚀 让AI为您的内容营销赋能！**
+
+[开始使用](https://universal-persona-content-engine.vercel.app/) | [GitHub](https://github.com/LGXfufile/universal-persona-content-engine) | [问题反馈](https://github.com/LGXfufile/universal-persona-content-engine/issues)
+
+Made with ❤️ by [LGXfufile](https://github.com/LGXfufile)
+
+</div>

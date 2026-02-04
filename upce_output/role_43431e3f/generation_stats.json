@@ -1,0 +1,13 @@
+{
+  "roleId": "role_43431e3f",
+  "roleDescription": "30岁北京程序员，年薪五十万，单身，男，无房无车，家是农村的",
+  "generatedAt": "2026-02-04T16:59:39.185Z",
+  "statistics": {
+    "titlesCount": 10,
+    "articlesCount": 3,
+    "imagesCount": 9,
+    "totalWords": 6632,
+    "avgWordsPerArticle": 2211
+  },
+  "outputPath": "/Users/guangxin/Documents/02_项目开发/前端项目/myGit/claude/20260130_1/upce_output/role_43431e3f"
+}
